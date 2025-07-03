@@ -21,31 +21,24 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    # Пропускаємо повідомлення від ботів
     if message.author.bot:
         return
 
-    # Перевіряємо, чи повідомлення вже оброблене
     if message.id in processed_messages:
         return
 
-    # Додаємо ID повідомлення до оброблених
     processed_messages.add(message.id)
 
     content = message.content.strip().lower()
 
-    # Перевірка формату NdM
     if re.fullmatch(r"\d{1,2}d\d{1,3}", content):
         amount, sides = map(int, content.split('d'))
 
-        # Перевірка коректності значень
         if amount <= 0 or sides <= 0 or amount > 20 or sides > 1000:
             await message.channel.send("❗ Некоректний запит. Можна максимум 20 кидків і не більше 1000 граней.")
-            # Видаляємо ID повідомлення після обробки помилки
             processed_messages.discard(message.id)
             return
 
-        # Генерація кидків
         rolls = [random.randint(1, sides) for _ in range(amount)]
         rolls_str = ", ".join(str(r) for r in rolls)
 
@@ -60,7 +53,6 @@ async def on_message(message):
             color=discord.Color.green()
         )
 
-        # Спроба видалити повідомлення користувача
         try:
             await message.delete()
         except discord.Forbidden:
@@ -68,21 +60,16 @@ async def on_message(message):
         except discord.HTTPException:
             print("⚠️ Не вдалося видалити повідомлення.")
 
-        # Відправка результату
         result_message = await message.channel.send(embed=embed)
 
-        await asyncio.sleep(600)
+        await asyncio.sleep(300) #Видалення повідомлення бота через n секунд
         try:
             await result_message.delete()
         except discord.NotFound:
-            pass  # Повідомлення вже видалене
+            pass
         except discord.HTTPException:
             print("⚠️ Не вдалося видалити повідомлення з результатом.")
 
-        # Видаляємо ID повідомлення після завершення обробки
         processed_messages.discard(message.id)
-
-    # Дозволяємо обробку інших команд, якщо вони є
-    await client.process_commands(message)
 
 client.run(TOKEN)
